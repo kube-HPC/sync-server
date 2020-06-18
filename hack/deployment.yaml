@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ksync
+spec:
+  selector:
+    matchLabels:
+      app: ksync
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ksync
+    spec:
+      volumes:
+        - name: hkube-dev-sources
+          persistentVolumeClaim:
+            claimName: hkube-dev-sources-pvc
+      containers:
+      - name: radar
+        image:  yehiyam/syncthing:v0.0.1
+        env:
+        - name: RADAR_POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        ports:
+        - containerPort: 8080
+          name: tunnel
+        resources: {}
+      - command:
+        - /syncthing/syncthing
+        - -home
+        - /var/syncthing/config
+        - -gui-apikey
+        - hkubectl
+        - -verbose
+        image: ksync/ksync:git-b2ca492
+        resources: {}
+        name: syncthing
+        ports:
+        - containerPort: 8384
+          name: rest
+          protocol: TCP
+        volumeMounts:
+          - name: hkube-dev-sources
+            mountPath: /sources
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name:  ksync
+spec:
+  selector:
+    app:  ksync
+  type:  ClusterIP
+  ports:
+  - name:  rest
+    port:  8384
+    targetPort:  8384
+  - name:  sync
+    port:  8080
+    targetPort:  8080
+  - name:  radar
+    port:  40321
+    targetPort:  40321
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 500m
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  labels:
+    app: ksync
+  name: ksync
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: ksync
+          servicePort: 8384
+        path: /hkube/sync/ui(/|$)(.*)
+      - backend:
+          serviceName: ksync
+          servicePort: 8080
+        path: /hkube/sync/sync(/|$)(.*)
+      - backend:
+          serviceName: ksync
+          servicePort: 40321
+        path: /hkube/sync/radar(/|$)(.*)
