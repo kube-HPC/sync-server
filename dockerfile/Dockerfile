@@ -1,13 +1,12 @@
 ARG BASE_PRIVATE_REGISTRY=""
-FROM ${BASE_PRIVATE_REGISTRY}hkube/base-node:v1.1.1
+FROM ${BASE_PRIVATE_REGISTRY}hkube/base-node:v1.2.0
 LABEL maintainer="yehiyam@gmail.com"
 
 ENV DOCKER_OS=linux
 ENV DOCKER_ARCH=amd64
 
-COPY config.xml /var/syncthing/config/config.xml
 
-ENV release=
+ENV release=v1.6.1
 
 RUN apt update && apt install -y \
      curl \
@@ -18,7 +17,7 @@ RUN apt update && apt install -y \
      && set -x \
      && mkdir /syncthing \
      && cd /syncthing \
-     && release=${release:-$(curl -s https://api.github.com/repos/syncthing/syncthing/releases/latest | jq -r .tag_name )} \
+     # && release=${release:-$(curl -s https://api.github.com/repos/syncthing/syncthing/releases/latest | jq -r .tag_name )} \
      && curl -sLO https://github.com/syncthing/syncthing/releases/download/${release}/syncthing-linux-amd64-${release}.tar.gz \
      && curl -sLO https://github.com/syncthing/syncthing/releases/download/${release}/sha256sum.txt.asc \
      && gpg --verify sha256sum.txt.asc \
@@ -28,5 +27,7 @@ RUN apt update && apt install -y \
      && rm -rf syncthing-linux-amd64-${release} sha256sum.txt.asc syncthing-linux-amd64-${release}.tar.gz \
      && rm -rf /var/lib/apt/lists/*
 
+ADD config.xml /syncthing/configOrg/config.xml
+ADD startSyncthing.sh /syncthing/startSyncthing.sh
 RUN npm install -g tcp-over-websockets
 ENV STNOUPGRADE=1
