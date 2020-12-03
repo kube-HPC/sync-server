@@ -29,7 +29,6 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - run: npm ci
       - run: NODE_ENV=test npm run-script test-travis
       - name: version
         run: |
