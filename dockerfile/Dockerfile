@@ -1,7 +1,6 @@
 ARG BASE_PRIVATE_REGISTRY=""
 FROM ${BASE_PRIVATE_REGISTRY}hkube/base-node:v2.0.1-buster
 LABEL maintainer="yehiyam@gmail.com"
-
 ENV DOCKER_OS=linux
 ENV DOCKER_ARCH=amd64
 
