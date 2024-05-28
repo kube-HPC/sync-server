@@ -1,7 +1,8 @@
 ARG BASE_PRIVATE_REGISTRY=""
 FROM ${BASE_PRIVATE_REGISTRY}hkube/base-node:v2.0.1-buster
 LABEL maintainer="yehiyam@gmail.com"
-
+USER root
+RUN chgrp -R 0 /hkube/sync-server && chmod -R g=u /hkube/sync-server
 ENV DOCKER_OS=linux
 ENV DOCKER_ARCH=amd64
 
