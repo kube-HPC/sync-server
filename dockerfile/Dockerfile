@@ -1,7 +1,6 @@
 ARG BASE_PRIVATE_REGISTRY=""
 FROM ${BASE_PRIVATE_REGISTRY}hkube/base-node:v2.0.1-buster
 LABEL maintainer="yehiyam@gmail.com"
-USER root
 ENV DOCKER_OS=linux
 ENV DOCKER_ARCH=amd64
 
@@ -30,5 +29,4 @@ RUN apt update && apt install -y \
 ADD config.xml /syncthing/configOrg/config.xml
 ADD startSyncthing.sh /syncthing/startSyncthing.sh
 RUN npm install -g tcp-over-websockets
-RUN chgrp -R 0 /sources && chmod -R g=u /sources
 ENV STNOUPGRADE=1
