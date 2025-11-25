@@ -7,6 +7,15 @@ ENV DOCKER_ARCH=amd64
 
 ENV release=v1.6.1
 
+# Fix Buster EOL apt sources
+RUN set -eux; \
+    sed -i 's|deb.debian.org/debian|archive.debian.org/debian|g' /etc/apt/sources.list; \
+    sed -i 's|security.debian.org|archive.debian.org|g' /etc/apt/sources.list; \
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until; \
+    apt-get update -o Acquire::AllowInsecureRepositories=true; \
+    apt-get install -y --no-install-recommends git curl gnupg jq ca-certificates; \
+    rm -rf /var/lib/apt/lists/*
+
 RUN apt update && apt install -y \
      curl \
      gnupg \
@@ -16,7 +25,6 @@ RUN apt update && apt install -y \
      && set -x \
      && mkdir /syncthing \
      && cd /syncthing \
-     # && release=${release:-$(curl -s https://api.github.com/repos/syncthing/syncthing/releases/latest | jq -r .tag_name )} \
      && curl -sLO https://github.com/syncthing/syncthing/releases/download/${release}/syncthing-linux-amd64-${release}.tar.gz \
      && curl -sLO https://github.com/syncthing/syncthing/releases/download/${release}/sha256sum.txt.asc \
      && gpg --verify sha256sum.txt.asc \
@@ -28,5 +36,6 @@ RUN apt update && apt install -y \
 
 ADD config.xml /syncthing/configOrg/config.xml
 ADD startSyncthing.sh /syncthing/startSyncthing.sh
+
 RUN npm install -g tcp-over-websockets
 ENV STNOUPGRADE=1
